@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useAppStore } from '../store'
+import { focusTerminalTabSurface } from '@/lib/focus-terminal-tab-surface'
 import { TOGGLE_TERMINAL_PANE_EXPAND_EVENT } from '@/constants/terminal'
 import {
   activateWebRuntimeSessionTab,
@@ -9,7 +10,12 @@ import { browserWorkspaceHasRemoteOwner } from '@/runtime/remote-browser-tab-own
 import { getActiveWorktreeRuntimeEnvironmentId } from './terminal-workspace-model'
 import type { TerminalBulkCloseController } from './use-terminal-bulk-close-actions'
 
-export function useTerminalActivationActions(controller: TerminalBulkCloseController) {
+type TerminalActivationActionsController = Pick<
+  TerminalBulkCloseController,
+  'activeWorktreeId' | 'setActiveBrowserTab' | 'setActiveTab' | 'setActiveTabType'
+>
+
+export function useTerminalActivationActions(controller: TerminalActivationActionsController) {
   const { activeWorktreeId, setActiveBrowserTab, setActiveTab, setActiveTabType } = controller
   const handleActivateTab = useCallback(
     (tabId: string) => {
@@ -23,6 +29,9 @@ export function useTerminalActivationActions(controller: TerminalBulkCloseContro
       }
       setActiveTab(tabId)
       setActiveTabType('terminal')
+      const activeLeafId =
+        useAppStore.getState().terminalLayoutsByTabId[tabId]?.activeLeafId ?? null
+      focusTerminalTabSurface(tabId, activeLeafId)
     },
     [activeWorktreeId, setActiveTab, setActiveTabType]
   )
